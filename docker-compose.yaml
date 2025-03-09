@@ -1,0 +1,251 @@
+volumes:
+  bitcoin-pipeline-redpanda:
+    external: true
+  bitcoin-pipeline-data:
+    external: true
+  bitcoin-pipeline-airflow-postgres:
+    external: true
+networks:
+  bitcoin-pipeline-network:
+    external: true
+
+x-airflow-common:
+  &airflow-common
+  image: airflow-base
+  build: docker/airflow
+  env_file: .env
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags:rw
+    - ./airflow/logs:/opt/airflow/logs:rw
+    - ./airflow/include:/opt/airflow/include:rw
+    - bitcoin-pipeline-data:/opt/data:rw
+  networks:
+    - bitcoin-pipeline-network
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    airflow-postgres:
+      condition: service_healthy
+
+services:
+  airflow-postgres:
+      image: postgres:13
+      container_name: airflow-postgres
+      environment:
+        POSTGRES_USER: airflow
+        POSTGRES_PASSWORD: airflow
+        POSTGRES_DB: airflow
+      volumes:
+        - bitcoin-pipeline-airflow-postgres:/var/lib/postgresql/data
+      networks:
+        - bitcoin-pipeline-network
+      healthcheck:
+        test: ["CMD", "pg_isready", "-U", "airflow"]
+        interval: 10s
+        retries: 5
+        start_period: 5s
+      restart: always
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    command: webserver
+    environment:
+      <<: *airflow-common-env
+      SHELL: /bin/bash
+    ports:
+      - 8888:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    environment:
+      <<: *airflow-common-env
+      SHELL: /bin/bash
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        if [[ -z "${AIRFLOW_UID}" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
+          echo "If you are on Linux, you SHOULD follow the instructions below to set "
+          echo "AIRFLOW_UID environment variable, otherwise files will be owned by root."
+          echo "For other operating systems you can get rid of the warning with manually created .env file:"
+          echo "    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user"
+          echo
+        fi
+        one_meg=1048576
+        mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
+        cpus_available=$$(grep -cE 'cpu[0-9]+' /proc/stat)
+        disk_available=$$(df / | tail -1 | awk '{print $$4}')
+        warning_resources="false"
+        if (( mem_available < 4000 )) ; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m"
+          echo "At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))"
+          echo
+          warning_resources="true"
+        fi
+        if (( cpus_available < 2 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m"
+          echo "At least 2 CPUs recommended. You have $${cpus_available}"
+          echo
+          warning_resources="true"
+        fi
+        if (( disk_available < one_meg * 10 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m"
+          echo "At least 10 GBs recommended. You have $$(numfmt --to iec $$((disk_available * 1024 )))"
+          echo
+          warning_resources="true"
+        fi
+        if [[ $${warning_resources} == "true" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: You have not enough resources to run Airflow (see above)!\e[0m"
+          echo "Please follow the instructions to increase amount of resources available:"
+          echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
+          echo
+        fi
+        mkdir -p /opt/data/temp
+        chown -R "${AIRFLOW_UID}:0" /opt/data/temp
+        exec /entrypoint airflow version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    user: "0:0"
+
+  spark-master:
+    image: spark-master
+    container_name: spark-master
+    build:
+      context: docker/spark-cluster
+      target: spark-master
+    environment:
+      SPARK_LOCAL_IP: 'spark-master'
+    ports:
+      - 8080:8080
+      - 7077:7077
+    volumes:
+      - bitcoin-pipeline-data:/opt/data:rw
+    networks:
+      - bitcoin-pipeline-network
+  spark-worker-0:
+    image: spark-worker
+    container_name: spark-worker-0
+    environment:
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=2g
+    build:
+      context: docker/spark-cluster
+      target: spark-worker
+    ports:
+      - 8081:8081
+    volumes:
+      - bitcoin-pipeline-data:/opt/data:rw
+    networks:
+      - bitcoin-pipeline-network
+    depends_on:
+      - spark-master
+  spark-worker-1:
+    image: spark-worker
+    container_name: spark-worker-1
+    build:
+      context: docker/spark-cluster
+      target: spark-worker
+    environment:
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=2g
+    ports:
+      - 8082:8081
+    volumes:
+      - bitcoin-pipeline-data:/opt/data:rw
+    networks:
+      - bitcoin-pipeline-network
+    depends_on:
+      - spark-master
+
+  # python-dev:
+  #   image: python-dev
+  #   container_name: python-dev
+  #   build: docker/dev
+  #   ports:
+  #     - 8889:8889
+  #   volumes:
+  #     - bitcoin-pipeline-data:/opt/data:rw
+  #     - ./airflow:/home/user/airflow
+  #   networks:
+  #     - bitcoin-pipeline-network
+  #   tty: true
+
+  # redpanda-0:
+  #   command:
+  #     - redpanda
+  #     - start
+  #     - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+  #     # Address the broker advertises to clients that connect to the Kafka API.
+  #     # Use the internal addresses to connect to the Redpanda brokers'
+  #     # from inside the same Docker network.
+  #     # Use the external addresses to connect to the Redpanda brokers'
+  #     # from outside the Docker network.
+  #     - --advertise-kafka-addr internal://redpanda-0:9092,external://localhost:19092
+  #     - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+  #     # Address the broker advertises to clients that connect to the HTTP Proxy.
+  #     - --advertise-pandaproxy-addr internal://redpanda-0:8082,external://localhost:18082
+  #     - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+  #     # Redpanda brokers use the RPC API to communicate with each other internally.
+  #     - --rpc-addr redpanda-0:33145
+  #     - --advertise-rpc-addr redpanda-0:33145
+  #     # Mode dev-container uses well-known configuration properties for development in containers.
+  #     - --mode dev-container
+  #     # Tells Seastar (the framework Redpanda uses under the hood) to use 1 core on the system.
+  #     - --smp 1
+  #     - --default-log-level=info
+  #   image: docker.redpanda.com/redpandadata/redpanda:v24.3.5
+  #   container_name: redpanda-0
+  #   volumes:
+  #     - bitcoin-pipeline-redpanda:/var/lib/redpanda/data
+  #   networks:
+  #     - bitcoin-pipeline-network
+  #   ports:
+  #     - 18081:18081
+  #     - 18082:18082
+  #     - 19092:19092
+  #     - 19644:9644
