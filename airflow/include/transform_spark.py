@@ -70,7 +70,7 @@ if __name__ == '__main__':
         .schema(schema) \
         .csv(args.input)
     
-    df_clean = clean_cast(df)
+    df_clean = clean_types(df)
     
     df_transform = transform_ohlc(df_clean)
 
