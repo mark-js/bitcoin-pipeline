@@ -2,8 +2,11 @@ from pyspark.sql import SparkSession, types, DataFrame
 import pyspark.sql.functions as F
 
 
-def clean_cast(df:DataFrame) -> DataFrame:
-    return df.withColumn('grossValue', F.round(df.grossValue).cast(types.LongType()))
+def clean_types(df:DataFrame) -> DataFrame:
+    return df.withColumns({
+        'grossValue':F.round(df.grossValue).cast(types.LongType()),
+        'foreignNotional':F.round(df.foreignNotional, 4).cast(types.DoubleType())
+    })
 
 
 def transform_ohlc(df:DataFrame) -> DataFrame:
