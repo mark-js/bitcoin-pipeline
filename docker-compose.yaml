@@ -1,9 +1,11 @@
 volumes:
-  bitcoin-pipeline-redpanda:
-    external: true
+  # bitcoin-pipeline-redpanda:
+  #   external: true
   bitcoin-pipeline-data:
     external: true
   bitcoin-pipeline-airflow-postgres:
+    external: true
+  bitcoin-pipeline-postgres:
     external: true
 networks:
   bitcoin-pipeline-network:
@@ -38,7 +40,7 @@ x-airflow-common:
 
 services:
   airflow-postgres:
-      image: postgres:13
+      image: postgres:16
       container_name: airflow-postgres
       environment:
         POSTGRES_USER: airflow
@@ -202,18 +204,39 @@ services:
     depends_on:
       - spark-master
 
-  # python-dev:
-  #   image: python-dev
-  #   container_name: python-dev
-  #   build: docker/dev
-  #   ports:
-  #     - 8889:8889
-  #   volumes:
-  #     - bitcoin-pipeline-data:/opt/data:rw
-  #     - ./airflow:/home/user/airflow
-  #   networks:
-  #     - bitcoin-pipeline-network
-  #   tty: true
+  postgres:
+      image: postgres:16
+      container_name: postgres
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: ohlcv
+      ports:
+        - 5432:5432
+      volumes:
+        - bitcoin-pipeline-postgres:/var/lib/postgresql/data
+        - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      networks:
+        - bitcoin-pipeline-network
+      healthcheck:
+        test: ["CMD", "pg_isready", "-U", "postgres"]
+        interval: 10s
+        retries: 5
+        start_period: 5s
+      restart: always
+
+  python-dev:
+    image: python-dev
+    container_name: python-dev
+    build: docker/dev
+    ports:
+      - 8889:8889
+    volumes:
+      - bitcoin-pipeline-data:/opt/data:rw
+      - ./airflow:/home/user/airflow
+    networks:
+      - bitcoin-pipeline-network
+    tty: true
 
   # redpanda-0:
   #   command:

@@ -9,7 +9,7 @@ def clean_types(df:DataFrame) -> DataFrame:
     })
 
 
-def transform_ohlc(df:DataFrame) -> DataFrame:
+def transform_ohlcv(df:DataFrame) -> DataFrame:
     
     df_transform = df.select(
         F.to_timestamp(df.timestamp).alias('timestamp'),
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', required=True)
     parser.add_argument('--output_raw', required=True)
-    parser.add_argument('--output_transform', required=True)
+    parser.add_argument('--output_db', required=True)
     args = parser.parse_args()
 
     schema = types.StructType(
@@ -72,7 +72,17 @@ if __name__ == '__main__':
     
     df_clean = clean_types(df)
     
-    df_transform = transform_ohlc(df_clean)
+    df_ohlcv = transform_ohlcv(df_clean)
 
     df_clean.write.parquet(args.output_raw, mode='overwrite')
-    df_transform.write.parquet(args.output_transform, mode='overwrite')
+    df_ohlcv.write \
+        .jdbc(
+            'jdbc:postgresql://postgres:5432/ohlcv',
+            args.output_db,
+            mode='overwrite',
+            properties={
+                'user':'postgres',
+                'password':'postgres',
+                'driver':'org.postgresql.Driver'
+            }
+        )

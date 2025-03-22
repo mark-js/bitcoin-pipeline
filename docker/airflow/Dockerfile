@@ -2,9 +2,6 @@ FROM apache/airflow:2.10.4-python3.12
 
 ARG jdk_version=17
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 USER root
 
 RUN apt-get update -y && \
@@ -16,4 +13,5 @@ RUN apt-get update -y && \
 
 USER user
 
-RUN 
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
