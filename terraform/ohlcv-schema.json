@@ -1,0 +1,38 @@
+[
+    {
+        "name": "timestamp",
+        "mode": "NULLABLE",
+        "type": "TIMESTAMP",
+        "description": ""
+    },
+    {
+        "name": "open",
+        "mode": "NULLABLE",
+        "type": "NUMERIC",
+        "description": ""
+    },
+    {
+        "name": "high",
+        "mode": "NULLABLE",
+        "type": "NUMERIC",
+        "description": ""
+    },
+    {
+        "name": "low",
+        "mode": "NULLABLE",
+        "type": "NUMERIC",
+        "description": ""
+    },
+    {
+        "name": "close",
+        "mode": "NULLABLE",
+        "type": "NUMERIC",
+        "description": ""
+    },
+    {
+        "name": "volume",
+        "mode": "NULLABLE",
+        "type": "NUMERIC",
+        "description": ""
+    }
+]
