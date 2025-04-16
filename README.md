@@ -1,6 +1,6 @@
 # **Bitcoin Pipeline**
 
-![Alt text](https://github.com/mark-js/bitcoin-pipeline/docs/assets/dashboard.gif)
+![Alt text](docs/assets/live_trading.png)
 
 ## Objective
 This project creates a data pipeline for processing Bitcoin market data with a focus on tick data analysis. Tick data has valuable market information, showing every trade with precise timestamp, price, and volume. The pipeline enables the development and deployment of trading strategies in a real-time streaming environment.
@@ -11,7 +11,7 @@ Bybit BTCUSDT perpetual futures contract is used in this project and data is acc
 
 ## Technology Stack
 
-![Alt text](https://github.com/mark-js/bitcoin-pipeline/docs/assets/tech_stack.png)
+![Alt text](docs/assets/tech_stack.png)
 
 #### Infrastructure Deployment
 - **Terraform:** Infrastructure as code for provisioning cloud resources (BigQuery datasets, tables, GCS buckets)
