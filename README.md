@@ -1,13 +1,17 @@
 # **Bitcoin Pipeline**
 
-## Objective
-This project creates a data pipeline for processing Bitcoin market data with a focus on tick data analysis. Tick data has valuable market information, showing every trade with precise timestamp, price, and volume.
+![Alt text](https://github.com/mark-js/bitcoin-pipeline/docs/assets/dashboard.gif)
 
-The pipeline transforms trading data into 1-minute OHLCV (Open, High, Low, Close, Volume) candles as a _proof of concept_, while preserving access to the underlying raw data for advanced analysis.
+## Objective
+This project creates a data pipeline for processing Bitcoin market data with a focus on tick data analysis. Tick data has valuable market information, showing every trade with precise timestamp, price, and volume. The pipeline enables the development and deployment of trading strategies in a real-time streaming environment.
+
+As a proof of concept, the pipeline aggregates tick data into 1-minute OHLCV (Open, High, Low, Close, Volume) candles, while still retaining access to the raw tick data for more in-depth analysis.
 
 Bybit BTCUSDT perpetual futures contract is used in this project and data is accessed through HTTP download and Websocket connection.
 
 ## Technology Stack
+
+![Alt text](https://github.com/mark-js/bitcoin-pipeline/docs/assets/tech_stack.png)
 
 #### Infrastructure Deployment
 - **Terraform:** Infrastructure as code for provisioning cloud resources (BigQuery datasets, tables, GCS buckets)
@@ -34,9 +38,10 @@ Bybit BTCUSDT perpetual futures contract is used in this project and data is acc
 - **Plotly Dash:** Visualization interface for both historical and real-time data
 
 #### Implementation Notes
-- Local PostgreSQL database was used in real-time visualization
-- Bigquery was too slow to access at 200 millisecond intervals
-- Flink inserts into Bigquery took 2-3 minutes
+- Local PostgreSQL database was used for the real-time visualization in Dashboard
+- Bigquery was too slow to access at 200 millisecond intervals and Flink inserts into Bigquery took 2-3 minutes
+- There can be gaps in live data and may not be complete. This could be solved using Bybit Rest API
+- Historical data is updated daily starting at 00:00 UTC
 
 ## Local Deployment
 
