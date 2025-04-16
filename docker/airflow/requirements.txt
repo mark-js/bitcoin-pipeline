@@ -1,2 +1,5 @@
 apache-airflow-providers-apache-spark==5.0.1
+apache-airflow-providers-google==11.0.0
+google-cloud-storage==2.19.0
+google-cloud-bigquery==3.20.1
 pyspark==3.5.5

@@ -1,19 +1,20 @@
+import requests
+from pendulum import datetime
+
 from airflow.decorators import dag, task
+from airflow.models.baseoperator import chain
 from airflow.sensors.base import PokeReturnValue
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from pendulum import datetime
-import requests
 
 
 @dag(
-    start_date=datetime(2025,3,10),
+    start_date=datetime(2025,4,5),
     description='Download from ByBit using sensor',
     schedule='@daily',
     catchup=True
 )
 def bybit_pipeline():
-
     download_url = '{{ var.json.bybit.url }}/{{ var.json.bybit.product }}'
     product = '{{ var.json.bybit.product }}'    
     date = '{{ ds }}'
@@ -59,7 +60,12 @@ def bybit_pipeline():
         conn_id='postgres_ohlcv',
         sql='sql/upsert_drop_postgres.sql'
     )
-
-    download_file(download_url, product, date, data_storage) >> transform_load_data >> delete_temp_file(data_storage, product, date) >> upsert_drop_postgres
+    
+    chain(
+        download_file(download_url, product, date, data_storage),
+        transform_load_data,
+        [delete_temp_file(data_storage, product, date), upsert_drop_postgres]
+    )
+    
 
 bybit_pipeline()

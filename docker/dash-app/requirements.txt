@@ -1,0 +1,10 @@
+confluent-kafka==2.8.0
+pyspark==3.5.5
+dash==3.0.0
+duckdb==1.2.1
+polars==1.25.2
+connectorx==0.4.2
+numpy==2.2.4
+pyarrow==19.0.1
+psycopg2-binary==2.9.10
+dash-bootstrap-components==2.0.0

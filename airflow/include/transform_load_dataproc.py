@@ -38,9 +38,10 @@ def transform_ohlcv(df: DataFrame) -> DataFrame:
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--temp_bucket', required=True)
     parser.add_argument('--input', required=True)
     parser.add_argument('--output_raw', required=True)
-    parser.add_argument('--output_db', required=True)
+    parser.add_argument('--output_table', required=True)
     args = parser.parse_args()
 
     schema = types.StructType(
@@ -61,6 +62,7 @@ def main():
     spark = SparkSession.builder \
         .appName('bybit pipeline') \
         .getOrCreate()
+    spark.conf.set('temporaryGcsBucket', args.temp_bucket)
     
     df = spark.read \
         .option('header', True) \
@@ -69,18 +71,10 @@ def main():
     df_clean = clean_types(df)
     df_ohlcv = transform_ohlcv(df_clean)
     df_clean.write.parquet(args.output_raw, mode='overwrite')
-    df_ohlcv.write \
-        .jdbc(
-            'jdbc:postgresql://postgres:5432/ohlcv',
-            args.output_db,
-            mode='overwrite',
-            properties={
-                'user':'postgres',
-                'password':'postgres',
-                'driver':'org.postgresql.Driver'
-            }
-        )
-    
+    df_ohlcv.write.format('bigquery') \
+        .option('table', args.output_table) \
+        .save()
+
 
 if __name__ == '__main__':
     main()
