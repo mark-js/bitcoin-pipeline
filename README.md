@@ -1,6 +1,6 @@
 # **Bitcoin Pipeline**
 
-![Alt text](docs/assets/live_trading.png)
+![Alt text](docs/assets/live_trading.gif)
 
 ## Objective
 This project creates a data pipeline for processing Bitcoin market data with a focus on tick data analysis. Tick data has valuable market information, showing every trade with precise timestamp, price, and volume. The pipeline enables the development and deployment of trading strategies in a real-time streaming environment.
@@ -40,6 +40,7 @@ Bybit BTCUSDT perpetual futures contract is used in this project and data is acc
 #### Implementation Notes
 - Local PostgreSQL database was used for the real-time visualization in Dashboard
 - Bigquery was too slow to access at 200 millisecond intervals and Flink inserts into Bigquery took 2-3 minutes
+- Live data is still available in Bigquery btcusdt_live table
 - There can be gaps in live data and may not be complete. This could be solved using Bybit Rest API
 - Historical data is updated daily starting at 00:00 UTC
 
@@ -54,7 +55,7 @@ make backend    # Start backend services
 # Trigger Airflow DAG: bybit_pipeline
 # (Configure start date in airflow/dags/bybit_pipeline.py)
 
-make run        # Start dashboard (available at http://localhost:8050/)
+make run        # Run dashboard associated with dashboard (Dashboard available at http://localhost:8050/)
 ```
 
 #### Cleanup Local Environment
@@ -81,7 +82,7 @@ make backend-gcp    # Start backend services
 # Trigger Airflow DAG: bybit_pipeline_gcp
 # (Configure start date in airflow/dags/bybit_pipeline_gcp.py)
 
-make run-gcp        # Start dashboard (available at http://localhost:8050/)
+make run-gcp        # Run dashboard associated with dashboard (Dashboard available at http://localhost:8050/)
 ```
 
 #### Cleanup GCP Environment
@@ -90,3 +91,5 @@ make down-gcp       # Stop local services
 make remove-gcp     # Delete local Docker networks and volumes
 terraform destroy   # Warning: Deletes all data in GCS and BigQuery
 ```
+
+![Alt text](docs/assets/dashboard.png)

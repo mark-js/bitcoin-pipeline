@@ -173,6 +173,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+.terraform.lock.hcl
 variables.tf
 # Local .terraform directories
 **/.terraform/*

@@ -135,10 +135,11 @@ def bybit_pipeline_gcp():
     )
 
     chain(
-        [download_file_local(download_url, product, date, temp_storage), create_dataproc_cluster],
+        download_file_local(download_url, product, date, temp_storage),
         upload_temp_files_gcs,
         submit_pyspark_dataproc,
         [upsert_drop_bigquery, delete_file_local(temp_storage, product, date), delete_temp_files_gcs]
     )
+    create_dataproc_cluster >> submit_pyspark_dataproc
 
 bybit_pipeline_gcp()
