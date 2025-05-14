@@ -70,7 +70,7 @@ Configure environment:
 - Setup service accounts on GCP
 - Rename template.env to .env and configure variables
 - template.env files are in root folder and docker/airflow, docker/dash-app, docker/flink, docker/websocket-producer
-- Rename terraform_variables to variables.tf and configure
+- Add terraform.tfvars to terraform folder and configure values corresponding to variables.tf
 
 #### Deploy
 ```

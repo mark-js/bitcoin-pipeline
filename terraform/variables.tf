@@ -1,14 +1,14 @@
 variable "project" {
   type    = string
-  default = ""
+  sensitive = true
 }
 
 variable "region" {
   type    = string
-  default = ""
+  sensitive = true
 }
 
 variable "bucket_name" {
   type    = string
-  default = ""
+  sensitive = true
 }
