@@ -9,10 +9,10 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import polars as pl
 
-from bitcoin_pipeline.dash_app.subplot import make_candlestick_subplot
-from bitcoin_pipeline.dash_app.layout import layout
-from bitcoin_pipeline.duckdb_cache.duckdb_cache import DuckDBCache
-from bitcoin_pipeline.kafka.consumer import LiveDataConsumer
+from dashboard.dash_app.subplot import make_candlestick_subplot
+from dashboard.dash_app.layout import layout
+from dashboard.duckdb_cache import DuckDBCache
+from dashboard.consumer import LiveDataConsumer
 
 
 def dash_app(
