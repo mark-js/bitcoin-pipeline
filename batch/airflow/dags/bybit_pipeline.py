@@ -9,7 +9,7 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
 
 @dag(
-    start_date=datetime(2025,4,5),
+    start_date=datetime(2026,3,1),
     description='Download from ByBit using sensor',
     schedule='@daily',
     catchup=True
@@ -40,7 +40,7 @@ def bybit_pipeline():
         task_id='read_data',
         conn_id='spark_master',
         packages='org.postgresql:postgresql:42.7.5',
-        application='include/transform_load_spark.py',
+        application='/opt/spark/jobs/transform_load_spark.py',
         application_args=[
             '--input',
             f'{data_storage}/temp/{product}{date}.csv.gz',

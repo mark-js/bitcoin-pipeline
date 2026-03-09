@@ -22,4 +22,4 @@ WORKDIR ${home}
 RUN curl https://install.duckdb.org | sh
 
 ENV PATH=${home}/.duckdb/cli/latest:${PATH} \
-    PYTHONPATH=${home}
+    PYTHONPATH=${home}/dashboard/src

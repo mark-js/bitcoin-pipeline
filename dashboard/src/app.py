@@ -9,10 +9,10 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import polars as pl
 
-from dashboard.dash_app.subplot import make_candlestick_subplot
-from dashboard.dash_app.layout import layout
-from dashboard.duckdb_cache import DuckDBCache
-from dashboard.consumer import LiveDataConsumer
+from dash_app.subplot import make_candlestick_subplot
+from dash_app.layout import layout
+from duckdb_cache import DuckDBCache
+from consumer import LiveDataConsumer
 
 
 def dash_app(
@@ -88,7 +88,7 @@ def dash_app(
     def update_historical_graph(value):
         df_historic = cache_historical.get_data(historical_query).pl() \
             .sort('timestamp') \
-            .group_by_dynamic('timestamp', every=f'{value}m') \
+            .group_by_dynamic('timestamp', every=value) \
             .agg(
                 pl.col('open').first(),
                 pl.col('high').max(),

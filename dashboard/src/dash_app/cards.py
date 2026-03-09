@@ -90,13 +90,13 @@ historic_graph_card = dbc.Card(
         [
             dbc.RadioItems(
                 options=[
-                    {'label':'1 min', 'value':1},
-                    {'label':'5 min', 'value':5},
-                    {'label':'10 min', 'value':10},
-                    {'label':'15 min', 'value':15},
-                    {'label':'30 min', 'value':30},
-                    {'label':'60 min', 'value':60}],
-                value=1,
+                    {'label':'1 min', 'value':'1m'},
+                    {'label':'5 min', 'value':'5m'},
+                    {'label':'10 min', 'value':'10m'},
+                    {'label':'15 min', 'value':'15m'},
+                    {'label':'30 min', 'value':'30m'},
+                    {'label':'1 hour', 'value':'1h'}],
+                value='1m',
                 inline=True,
                 id='historical-selection',
                 style={'font-family':'monospace', 'padding':'1rem'}

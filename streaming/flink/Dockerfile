@@ -16,4 +16,4 @@ RUN python -m pip install --upgrade pip && \
 USER user
     
 WORKDIR /opt
-ENV PYTHONPATH=/opt
+ENV PYTHONPATH=/opt/flink/jobs

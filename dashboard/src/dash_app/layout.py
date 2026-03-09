@@ -1,6 +1,6 @@
 from dash import html
 import dash_bootstrap_components as dbc
-from bitcoin_pipeline.dash_app.cards import live_graph_card, live_table_card, historic_graph_card
+from dash_app.cards import live_graph_card, live_table_card, historic_graph_card
 
 
 layout = dbc.Container(

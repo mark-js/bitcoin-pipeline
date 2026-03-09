@@ -1,6 +1,6 @@
 FROM python:3.12-slim-bookworm AS base
 
-ARG spark_version=3.5.5
+ARG spark_version=3.5.8
 ARG hadoop_version=3
 ARG jdk_version=17
 
@@ -30,7 +30,7 @@ FROM base AS spark-master
 ARG spark_master_web_ui=8080
 
 EXPOSE ${spark_master_web_ui} ${SPARK_MASTER_PORT}
-CMD bin/spark-class org.apache.spark.deploy.master.Master >> logs/spark-master.out
+CMD ["/bin/bash", "-c", "bin/spark-class org.apache.spark.deploy.master.Master >> logs/spark-master.out"]
 
 
 FROM base AS spark-worker
@@ -38,4 +38,4 @@ FROM base AS spark-worker
 ARG spark_worker_web_ui=8081
 
 EXPOSE ${spark_worker_web_ui}
-CMD bin/spark-class org.apache.spark.deploy.worker.Worker spark://${SPARK_MASTER_HOST}:${SPARK_MASTER_PORT} >> logs/spark-worker.out
+CMD ["/bin/bash", "-c", "bin/spark-class org.apache.spark.deploy.worker.Worker spark://${SPARK_MASTER_HOST}:${SPARK_MASTER_PORT} >> logs/spark-worker.out"]
