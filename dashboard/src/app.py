@@ -2,7 +2,7 @@ import argparse
 import os
 from datetime import datetime
 import threading
-from typing import Tuple
+from typing import Tuple, Optional
 
 from dash import Dash, Output, Input
 import dash_bootstrap_components as dbc
@@ -139,23 +139,25 @@ def setup_queries(run_mode: str) -> Tuple[str, str]:
     return live_query, historical_query
     
 
-def setup_cache(run_mode: str, live_query: str, historical_query: str) -> Tuple[DuckDBCache, DuckDBCache]:
-    if run_mode == 'gcp':
-        attach_query = """
+def setup_cache(
+        live_query: str,
+        historical_query: str,
+        postgres_url: str,
+        gcp_project_id: Optional[str]) -> Tuple[DuckDBCache, DuckDBCache]:
+    if gcp_project_id:
+        attach_query = f"""
                 INSTALL bigquery FROM community;
                 LOAD bigquery;
-                ATTACH 'project=development-456611' AS bq (TYPE bigquery, READ_ONLY);
+                ATTACH 'project={gcp_project_id}' AS bq (TYPE bigquery, READ_ONLY);
             """
         cache_historical = DuckDBCache()
         cache_historical.connect_query(attach_query)
-    elif run_mode == 'local':
-        cache_historical = DuckDBCache()
-        cache_historical.connect_database(database_con=os.environ['DASH_POSTGRES_URL'], database_type='postgres')
     else:
-        raise ValueError("Unsupported run_mode. Should be 'gcp' or 'local'")
+        cache_historical = DuckDBCache()
+        cache_historical.connect_database(database_con=postgres_url, database_type='postgres')
 
     cache_live = DuckDBCache()
-    cache_live.connect_database(database_con=os.environ['DASH_POSTGRES_URL'], database_type='postgres')
+    cache_live.connect_database(database_con=postgres_url, database_type='postgres')
 
     cache_live.set_schedule_reset(live_query, second=1, interval=60)
     cache_historical.set_schedule_reset(historical_query, hour=0, minute=5, second=0, interval=600)
@@ -177,8 +179,16 @@ def main():
     parser.add_argument('run_mode', choices=['gcp', 'local'])
     args = parser.parse_args()
 
+    project_id = os.environ.get('DASH_GCP_PROJECT_ID')
+    if args.run_mode == 'gcp' and not project_id:
+        raise ValueError('DASH_GCP_PROJECT_ID environment variable is required in gcp mode')
+
+    postgres_url = os.environ.get('DASH_POSTGRES_URL')
+    if not postgres_url:
+        raise ValueError('DASH_POSTGRES_URL environment variable is required')
+
     live_query, historical_query = setup_queries(args.run_mode)
-    cache_live, cache_historical = setup_cache(args.run_mode, live_query, historical_query)
+    cache_live, cache_historical = setup_cache(live_query, historical_query, postgres_url, project_id)
     kafka_consumer = setup_consumer()
 
     bybit_consumer_config = {
