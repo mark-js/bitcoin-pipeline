@@ -68,7 +68,7 @@ def main():
         .option('header', True) \
         .schema(schema) \
         .csv(args.input)
-    df_clean = clean_types(df)
+    df_clean = clean_types(df).cache()
     df_ohlcv = transform_ohlcv(df_clean)
     df_clean.write.parquet(args.output_raw, mode='overwrite')
     df_ohlcv.write.format('bigquery') \

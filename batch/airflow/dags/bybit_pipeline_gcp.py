@@ -14,7 +14,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
 
 
 @dag(
-    start_date=datetime(2025,4,5),
+    start_date=datetime(2026,3,1),
     description='Download from ByBit using sensor',
     schedule='@daily',
     catchup=True,
@@ -31,7 +31,8 @@ def bybit_pipeline_gcp():
     date = '{{ ds }}'
     date_nodash = '{{ ds_nodash }}'
     temp_storage = '{{ var.value.local_storage }}'
-    gcp_bucket_name = '{{ var.value.gcp_bucket_name }}'
+    gcp_data_bucket_name = '{{ var.value.gcp_data_bucket_name }}'
+    gcp_staging_bucket_name = '{{ var.value.gcp_staging_bucket_name }}'
     run_id = '{{ run_id }}'
     
     @task.sensor(mode='poke', poke_interval=60, timeout=300)
@@ -49,15 +50,14 @@ def bybit_pipeline_gcp():
 
         return PokeReturnValue(is_done=condition_met)
         
-    upload_temp_files_gcs = LocalFilesystemToGCSOperator(
+    upload_csv_file_gcs = LocalFilesystemToGCSOperator(
         task_id='upload_temp_files_gcs',
         gcp_conn_id='gcp',
         src=[
-            '/opt/airflow/include/transform_load_dataproc.py',
             f'{temp_storage}/{product}{date}.csv.gz'
         ],
         dst=f'temp/{run_id}/',
-        bucket=gcp_bucket_name
+        bucket=gcp_staging_bucket_name
     )
 
     create_dataproc_cluster = DataprocCreateClusterOperator(
@@ -93,14 +93,14 @@ def bybit_pipeline_gcp():
             'placement': {'cluster_name': 'e2-cluster'},
             'pyspark_job': {
                 'main_python_file_uri': 
-                    f'gs://{gcp_bucket_name}/temp/{run_id}/transform_load_dataproc.py',
+                    f'gs://{gcp_staging_bucket_name}/spark/jobs/transform_load_dataproc.py',
                 'args': [
                     '--temp_bucket',
-                    '{{ var.value.gcp_temp_bucket_name }}',
+                    gcp_staging_bucket_name,
                     '--input',
-                    f'gs://{gcp_bucket_name}/temp/{run_id}/{product}{date}.csv.gz',
+                    f'gs://{gcp_staging_bucket_name}/temp/{run_id}/{product}{date}.csv.gz',
                     '--output_raw',
-                    f'gs://{gcp_bucket_name}/data/{product}/{date}',
+                    f'gs://{gcp_data_bucket_name}/data/{product}/{date}',
                     '--output_table',
                     f'staging.{product}{date_nodash}'
                 ]
@@ -127,16 +127,15 @@ def bybit_pipeline_gcp():
     delete_temp_files_gcs = GCSDeleteObjectsOperator(
         task_id='delete_temp_files_gcs',
         gcp_conn_id='gcp',
-        bucket_name=gcp_bucket_name,
+        bucket_name=gcp_staging_bucket_name,
         objects=[
-            f'temp/{run_id}/transform_load_dataproc.py',
             f'temp/{run_id}/{product}{date}.csv.gz'
         ],
     )
 
     chain(
         download_file_local(download_url, product, date, temp_storage),
-        upload_temp_files_gcs,
+        upload_csv_file_gcs,
         submit_pyspark_dataproc,
         [upsert_drop_bigquery, delete_file_local(temp_storage, product, date), delete_temp_files_gcs]
     )

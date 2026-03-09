@@ -5,7 +5,7 @@ from pyflink.table import StreamTableEnvironment
 from pyflink.table.window import Tumble
 from pyflink.table.expressions import col, lit
 
-from bitcoin_pipeline.flink.stream_tables import (
+from stream_tables import (
     create_source_schema, 
     create_kafka_source, 
     create_sink_schema, 
