@@ -66,10 +66,14 @@ make remove     # Delete Docker networks and volumes. Warning: Deletes all Parqu
 
 ## GCP Deployment
 
+Service account setup
+- Create a service account in GCP IAM
+- Grant Owner role (or minimum: BigQuery Admin, Dataproc Administrator, Storage Admin, Service Account User)
+- Create and download a JSON key, the file path is used in .env
+
 Configure environment:
-- Setup service accounts on GCP
 - Rename template.env to .env and configure variables
-- template.env files are in root folder and docker/airflow, docker/dash-app, docker/flink, docker/websocket-producer
+- template.env files are located in: root, airflow, dashboard, streaming/flink, and streaming/kafka
 - Add terraform.tfvars to terraform folder and configure values corresponding to variables.tf
 
 #### Deploy

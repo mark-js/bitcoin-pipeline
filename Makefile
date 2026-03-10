@@ -14,7 +14,7 @@ backend:	## docker compose up backend
 run:		## docker compose up backend and app
 	docker compose -f docker-compose.yaml up -d
 	docker compose -f docker-compose.yaml up websocket-producer -d
-	docker exec flink-jobmanager flink run -py bitcoin_pipeline/flink/run_postgres.py
+	docker exec flink-jobmanager flink run -py /opt/flink/jobs/run_postgres.py
 	docker compose -f docker-compose.yaml up dash-app -d
 down:		## docker compose down backend and app
 	docker compose -f docker-compose.yaml --profile app down
@@ -38,7 +38,7 @@ backend-gcp:	## equivalent gcp deployment
 run-gcp:	## equivalent gcp deployment
 	docker compose -f docker-compose-gcp.yaml up -d
 	docker compose -f docker-compose-gcp.yaml up websocket-producer -d
-	docker exec flink-jobmanager flink run -py bitcoin_pipeline/flink/run_bigquery.py
+	docker exec flink-jobmanager flink run -py /opt/flink/jobs/run_bigquery.py
 	docker compose -f docker-compose-gcp.yaml up dash-app -d
 down-gcp:	## equivalent gcp deployment
 	docker compose -f docker-compose-gcp.yaml --profile app down

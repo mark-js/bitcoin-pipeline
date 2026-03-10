@@ -14,8 +14,8 @@ networks:
 x-airflow-common:
   &airflow-common
   image: airflow-base
-  build: ./docker/airflow
-  env_file: ./docker/airflow/.env
+  build: ./batch/airflow
+  env_file: ./batch/airflow/.env
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -26,11 +26,10 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
   volumes:
-    - ./airflow/dags:/opt/airflow/dags:rw
-    - ./airflow/logs:/opt/airflow/logs:rw
-    - ./airflow/include:/opt/airflow/include:rw
+    - ./batch/airflow/dags:/opt/airflow/dags:rw
+    - ./batch/airflow/logs:/opt/airflow/logs:rw
     - bitcoin-pipeline-gcp-data:/opt/data
-    - ${AIRFLOW_GOOGLE_CREDENTIALS_AIRFLOW}:/opt/.google/google.json
+    - ${GOOGLE_CREDENTIALS_ADMIN}:/opt/.google/google.json
   networks:
     - bitcoin-pipeline-gcp-network
   user: "1000:0"
@@ -166,7 +165,7 @@ services:
       - 5432:5432
     volumes:
       - bitcoin-pipeline-gcp-postgres:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./streaming/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - bitcoin-pipeline-gcp-network
     healthcheck:
@@ -204,8 +203,8 @@ services:
 
   flink-jobmanager:
     container_name: flink-jobmanager
-    build: ./docker/flink
-    env_file: ./docker/flink/.env
+    build: ./streaming/flink
+    env_file: ./streaming/flink/.env
     pull_policy: never
     platform: linux/amd64
     hostname: jobmanager
@@ -214,8 +213,8 @@ services:
     ports:
       - 8088:8081
     volumes:
-      - ./bitcoin_pipeline:/opt/bitcoin_pipeline
-      - ${AIRFLOW_GOOGLE_CREDENTIALS_BIGQUERY}:/opt/.google/google.json
+      - ./streaming/flink/jobs:/opt/flink/jobs
+      - ${GOOGLE_CREDENTIALS_ADMIN}:/opt/.google/google.json
     networks:
       - bitcoin-pipeline-gcp-network 
     extra_hosts:
@@ -233,16 +232,16 @@ services:
 
   flink-taskmanager:
     container_name: flink-taskmanager
-    build: ./docker/flink
-    env_file: ./docker/flink/.env
+    build: ./streaming/flink
+    env_file: ./streaming/flink/.env
     pull_policy: never
     platform: linux/amd64
     expose:
       - 6121
       - 6122
     volumes:
-      - ./bitcoin_pipeline:/opt/bitcoin_pipeline
-      - ${AIRFLOW_GOOGLE_CREDENTIALS_BIGQUERY}:/opt/.google/google.json
+      - ./streaming/flink/jobs:/opt/flink/jobs
+      - ${GOOGLE_CREDENTIALS_ADMIN}:/opt/.google/google.json
     networks:
       - bitcoin-pipeline-gcp-network
     extra_hosts:
@@ -261,26 +260,26 @@ services:
   websocket-producer:
     image: websocket-producer
     container_name: websocket-producer
-    build: ./docker/websocket-producer
-    env_file: docker/websocket-producer/.env
+    build: ./streaming/kafka
+    env_file: ./streaming/kafka/.env
     volumes:
-      - ./bitcoin_pipeline:/home/user/bitcoin_pipeline
+      - ./streaming/kafka/src:/home/user/kafka/src
     networks:
       - bitcoin-pipeline-gcp-network
-    entrypoint: python /home/user/bitcoin_pipeline/kafka/producer.py
+    entrypoint: python /home/user/kafka/src/producer.py
     profiles: [app]
 
   dash-app:
     image: dash-app
     container_name: dash-app
-    build: ./docker/dash-app
-    env_file: ./docker/dash-app/.env
+    build: ./dashboard
+    env_file: ./dashboard/.env
     ports:
       - 8050:8050
     volumes:
-      - ./bitcoin_pipeline:/home/user/bitcoin_pipeline
-      - ${AIRFLOW_GOOGLE_CREDENTIALS_BIGQUERY}:/home/user/.google/google.json
+      - ./dashboard/src:/home/user/dashboard/src
+      - ${GOOGLE_CREDENTIALS_ADMIN}:/home/user/.google/google.json
     networks:
       - bitcoin-pipeline-gcp-network
-    entrypoint: python /home/user/bitcoin_pipeline/app.py gcp
+    entrypoint: python /home/user/dashboard/src/app.py gcp
     profiles: [app]
