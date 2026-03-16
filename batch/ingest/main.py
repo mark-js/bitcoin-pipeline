@@ -57,7 +57,7 @@ def main():
     df_clean = clean(df=df)
 
     tmp_file = '/tmp/data.parquet'
-    df_clean.collect().write_parquet(tmp_file, compression='zstd', compression_level=5)
+    df_clean.sink_parquet(tmp_file, compression='zstd', compression_level=5)
     upload_to_gcs(file_path=tmp_file, bucket_name=args.bucket, object_name=args.object)
 
 

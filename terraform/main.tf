@@ -2,7 +2,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "6.29.0"
+      version = "7.23.0"
     }
   }
 }
@@ -64,20 +64,46 @@ resource "google_bigquery_table" "core_table_live" {
   deletion_protection = false
 }
 
-# moved to airflow
-# resource "google_dataproc_cluster" "single-cluster" {
-#   name   = "single-cluster"
-#   region = var.region
+resource "google_artifact_registry_repository" "pipeline" {
+  location = var.region
+  repository_id = "pipeline"
+  format = "DOCKER"
+}
 
-#   cluster_config {
-#     master_config {
-#       num_instances = 1
-#       machine_type  = "e2-standard-2"
-#     }
-#     software_config {
-#       override_properties = {
-#         "dataproc:dataproc.allow.zero.workers" = "true"
-#       }
-#     }
-#   }
-# }
+resource "google_cloud_run_v2_job" "ingest" {
+  name     = "ingest"
+  location = var.region
+
+  template {
+    template {
+      containers {
+        image = "${google_artifact_registry_repository.pipeline.registry_uri}/ingest:latest"
+        resources {
+          limits = {
+            memory = "1Gi"
+            cpu    = "1"
+          }
+        }
+      }
+      service_account = google_service_account.ingest.email
+      timeout         = "1200s"
+      max_retries     = 1
+    }
+  }
+
+  depends_on = [
+    google_project_iam_member.ingest_storage_admin
+  ]
+}
+
+resource "google_service_account" "ingest" {
+  account_id   = "ingest"
+  display_name = "Ingest Service Account"
+  description  = "Service account for Cloud Run Job - ingest"
+}
+
+resource "google_project_iam_member" "ingest_storage_admin" {
+  project = var.project
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${google_service_account.ingest.email}"
+}

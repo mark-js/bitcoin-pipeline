@@ -1,3 +1,8 @@
+include .env
+export
+
+.PHONY: help create build backend run down remove create-gcp build-gcp backend-gcp run-gcp down-gcp remove-gcp build-ingest push-ingest
+
 help:
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST)
 
@@ -48,3 +53,7 @@ remove-gcp:	## equivalent gcp deployment
 	docker volume remove bitcoin-pipeline-gcp-airflow-postgres
 	docker volume remove bitcoin-pipeline-gcp-postgres
 	docker network remove bitcoin-pipeline-gcp-network
+build-ingest:
+	docker build -t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/pipeline/ingest:latest -f batch/ingest/Dockerfile batch/ingest
+push-ingest: build-ingest
+	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/pipeline/ingest:latest
