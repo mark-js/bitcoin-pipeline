@@ -29,7 +29,7 @@ x-airflow-common:
     - ./batch/airflow/dags:/opt/airflow/dags:rw
     - ./batch/airflow/logs:/opt/airflow/logs:rw
     - bitcoin-pipeline-gcp-data:/opt/data
-    - ${GOOGLE_CREDENTIALS_ADMIN}:/opt/.google/google.json
+    - ${GOOGLE_APPLICATION_CREDENTIALS}:/opt/.google/google.json
   networks:
     - bitcoin-pipeline-gcp-network
   user: "1000:0"
@@ -214,7 +214,7 @@ services:
       - 8088:8081
     volumes:
       - ./streaming/flink/jobs:/opt/flink/jobs
-      - ${GOOGLE_CREDENTIALS_ADMIN}:/opt/.google/google.json
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/opt/.google/google.json
     networks:
       - bitcoin-pipeline-gcp-network 
     extra_hosts:
@@ -241,7 +241,7 @@ services:
       - 6122
     volumes:
       - ./streaming/flink/jobs:/opt/flink/jobs
-      - ${GOOGLE_CREDENTIALS_ADMIN}:/opt/.google/google.json
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/opt/.google/google.json
     networks:
       - bitcoin-pipeline-gcp-network
     extra_hosts:
@@ -278,7 +278,7 @@ services:
       - 8050:8050
     volumes:
       - ./dashboard/src:/home/user/dashboard/src
-      - ${GOOGLE_CREDENTIALS_ADMIN}:/home/user/.google/google.json
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/home/user/.google/google.json
     networks:
       - bitcoin-pipeline-gcp-network
     entrypoint: python /home/user/dashboard/src/app.py gcp
