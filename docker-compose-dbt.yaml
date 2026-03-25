@@ -1,0 +1,12 @@
+services:
+  dbt-bigquery:
+    image: dbt-bigquery
+    container_name: dbt-bigquery-dev
+    build: ./analytics/dbt
+    env_file: ./analytics/dbt/.env
+    volumes:
+      - ./analytics/dbt/.dbt:/home/user/.dbt
+      - ./analytics/dbt/bitcoin_analytics:/home/user/bitcoin_analytics
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/home/user/.google/google.json
+    tty: True
+    entrypoint: /bin/bash

@@ -1,0 +1,12 @@
+sources:
+  - name: bybit_btcusdt
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('SOURCE_BTCUSDT_DATASET') }}"
+    tables:
+      - name: test-gcs-btcusdt
+  - name: onchain_bitcoin
+    database: bigquery-public-data
+    schema: crypto_bitcoin
+    tables:
+      - name: blocks
+      - name: transactions
