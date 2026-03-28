@@ -13,16 +13,16 @@ create:		## create docker volumes and network
 	docker volume create bitcoin-pipeline-postgres
 	docker network create bitcoin-pipeline-network
 build:		## docker compose build
-	docker compose -f docker-compose.yaml --profile app build
+	docker compose -f docker-compose.yml --profile app build
 backend:	## docker compose up backend
-	docker compose -f docker-compose.yaml up -d
+	docker compose -f docker-compose.yml up -d
 run:		## docker compose up backend and app
-	docker compose -f docker-compose.yaml up -d
-	docker compose -f docker-compose.yaml up websocket-producer -d
+	docker compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.yml up websocket-producer -d
 	docker exec flink-jobmanager flink run -py /opt/flink/jobs/run_postgres.py
-	docker compose -f docker-compose.yaml up dash-app -d
+	docker compose -f docker-compose.yml up dash-app -d
 down:		## docker compose down backend and app
-	docker compose -f docker-compose.yaml --profile app down
+	docker compose -f docker-compose.yml --profile app down
 remove:		## remove docker volumes and network. remove will delete stored data
 	@echo -n "Are you sure you want to remove stored data? [y/N] " && read ans && [ $${ans:-N} = y ]
 	docker volume remove bitcoin-pipeline-redpanda
@@ -37,16 +37,16 @@ create-gcp:	## equivalent gcp deployment
 	docker volume create bitcoin-pipeline-gcp-postgres
 	docker network create bitcoin-pipeline-gcp-network
 build-gcp:	## equivalent gcp deployment
-	docker compose -f docker-compose-gcp.yaml --profile app build
+	docker compose -f docker-compose.gcp.yml --profile app build
 backend-gcp:	## equivalent gcp deployment
-	docker compose -f docker-compose-gcp.yaml up -d
+	docker compose -f docker-compose.gcp.yml up -d
 run-gcp:	## equivalent gcp deployment
-	docker compose -f docker-compose-gcp.yaml up -d
-	docker compose -f docker-compose-gcp.yaml up websocket-producer -d
+	docker compose -f docker-compose.gcp.yml up -d
+	docker compose -f docker-compose.gcp.yml up websocket-producer -d
 	docker exec flink-jobmanager flink run -py /opt/flink/jobs/run_bigquery.py
-	docker compose -f docker-compose-gcp.yaml up dash-app -d
+	docker compose -f docker-compose.gcp.yml up dash-app -d
 down-gcp:	## equivalent gcp deployment
-	docker compose -f docker-compose-gcp.yaml --profile app down
+	docker compose -f docker-compose.gcp.yml --profile app down
 remove-gcp:	## equivalent gcp deployment
 	docker volume remove bitcoin-pipeline-gcp-redpanda
 	docker volume remove bitcoin-pipeline-gcp-data
@@ -54,6 +54,6 @@ remove-gcp:	## equivalent gcp deployment
 	docker volume remove bitcoin-pipeline-gcp-postgres
 	docker network remove bitcoin-pipeline-gcp-network
 build-ingest:
-	docker build -t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/pipeline/ingest:latest -f batch/ingest/Dockerfile batch/ingest
+	docker build -t us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/analytics/ingestion:latest -f analytics/ingestion/Dockerfile analytics/ingestion
 push-ingest: build-ingest
-	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/pipeline/ingest:latest
+	docker push us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/analytics/ingestion:latest

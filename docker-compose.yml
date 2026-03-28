@@ -14,8 +14,8 @@ networks:
 x-airflow-common:
   &airflow-common
   image: airflow-base
-  build: ./batch/airflow
-  env_file: ./batch/airflow/local.env
+  build: ./airflow
+  env_file: ./airflow/local.env
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -26,9 +26,9 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
   volumes:
-    - ./batch/airflow/dags:/opt/airflow/dags:rw
-    - ./batch/airflow/logs:/opt/airflow/logs:rw
-    - ./batch/spark/jobs:/opt/spark/jobs:rw
+    - ./airflow/dags:/opt/airflow/dags:rw
+    - ./airflow/logs:/opt/airflow/logs:rw
+    - ./market_data/spark/jobs:/opt/spark/jobs:rw
     - bitcoin-pipeline-data:/opt/data:rw
   networks:
     - bitcoin-pipeline-network
@@ -158,7 +158,7 @@ services:
     image: spark-master
     container_name: spark-master
     build:
-      context: ./batch/spark
+      context: ./market_data/spark
       target: spark-master
     environment:
       SPARK_LOCAL_IP: 'spark-master'
@@ -176,7 +176,7 @@ services:
       - SPARK_WORKER_CORES=1
       - SPARK_WORKER_MEMORY=2g
     build:
-      context: ./batch/spark
+      context: ./market_data/spark
       target: spark-worker
     ports:
       - 8081:8081
@@ -190,7 +190,7 @@ services:
     image: spark-worker
     container_name: spark-worker-1
     build:
-      context: ./batch/spark
+      context: ./market_data/spark
       target: spark-worker
     environment:
       - SPARK_WORKER_CORES=1
@@ -215,7 +215,7 @@ services:
       - 5432:5432
     volumes:
       - bitcoin-pipeline-postgres:/var/lib/postgresql/data
-      - ./streaming/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./market_data/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - bitcoin-pipeline-network
     healthcheck:
@@ -253,8 +253,8 @@ services:
 
   flink-jobmanager:
     container_name: flink-jobmanager
-    build: ./streaming/flink
-    env_file: ./streaming/flink/local.env
+    build: ./market_data/flink
+    env_file: ./market_data/flink/local.env
     pull_policy: never
     platform: linux/amd64
     hostname: jobmanager
@@ -263,7 +263,7 @@ services:
     ports:
       - 8088:8081
     volumes:
-      - ./streaming/flink/jobs:/opt/flink/jobs
+      - ./market_data/flink/jobs:/opt/flink/jobs
     networks:
       - bitcoin-pipeline-network 
     extra_hosts:
@@ -277,15 +277,15 @@ services:
     
   flink-taskmanager:
     container_name: flink-taskmanager
-    build: ./streaming/flink
-    env_file: ./streaming/flink/local.env
+    build: ./market_data/flink
+    env_file: ./market_data/flink/local.env
     pull_policy: never
     platform: linux/amd64
     expose:
       - 6121
       - 6122
     volumes:
-      - ./streaming/flink/jobs:/opt/flink/jobs
+      - ./market_data/flink/jobs:/opt/flink/jobs
     networks:
       - bitcoin-pipeline-network
     extra_hosts:
@@ -304,10 +304,10 @@ services:
   websocket-producer:
     image: websocket-producer
     container_name: websocket-producer
-    build: ./streaming/kafka
-    env_file: ./streaming/kafka/local.env
+    build: ./market_data/kafka
+    env_file: ./market_data/kafka/local.env
     volumes:
-      - ./streaming/kafka/src:/home/user/kafka/src
+      - ./market_data/kafka/src:/home/user/kafka/src
     networks:
       - bitcoin-pipeline-network
     entrypoint: python /home/user/kafka/src/producer.py
@@ -316,12 +316,12 @@ services:
   dash-app:
     image: dash-app
     container_name: dash-app
-    build: ./dashboard
-    env_file: ./dashboard/local.env
+    build: ./market_data/dashboard
+    env_file: ./market_data/dashboard/local.env
     ports:
       - 8050:8050
     volumes:
-      - ./dashboard/src:/home/user/dashboard/src
+      - ./market_data/dashboard/src:/home/user/dashboard/src
     networks:
       - bitcoin-pipeline-network
     entrypoint: python /home/user/dashboard/src/app.py local
