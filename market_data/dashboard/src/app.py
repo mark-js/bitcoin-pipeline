@@ -133,7 +133,7 @@ def setup_queries(run_mode: str) -> Tuple[str, str]:
     
     live_query = """
         SELECT timestamp, open, high, low, close, volume
-        FROM db.core.btcusdt_live
+        FROM db.core.btcusdt_streaming
         WHERE AGE(CAST(CURRENT_DATE + CURRENT_TIME AS TIMESTAMP), timestamp) <= INTERVAL 1 HOUR;
     """
     return live_query, historical_query

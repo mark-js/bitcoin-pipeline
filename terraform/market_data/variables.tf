@@ -5,5 +5,8 @@ variable "project" {
 
 variable "region" {
   type    = string
-  sensitive = true
+}
+
+variable "location_code" {
+  type    = string
 }

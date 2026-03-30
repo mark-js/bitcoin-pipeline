@@ -1,0 +1,74 @@
+[
+  {
+    "name": "timestamp",
+    "mode": "NULLABLE",
+    "type": "TIMESTAMP",
+    "description": ""
+  },
+  {
+    "name": "symbol",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": ""
+  },
+  {
+    "name": "side",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": ""
+  },
+  {
+    "name": "size",
+    "mode": "NULLABLE",
+    "type": "FLOAT",
+    "description": ""
+  },
+  {
+    "name": "price",
+    "mode": "NULLABLE",
+    "type": "FLOAT",
+    "description": ""
+  },
+  {
+    "name": "tick_direction",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": ""
+  },
+  {
+    "name": "trd_match_id",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": ""
+  },
+  {
+    "name": "gross_value",
+    "mode": "NULLABLE",
+    "type": "INTEGER",
+    "description": ""
+  },
+  {
+    "name": "home_notional",
+    "mode": "NULLABLE",
+    "type": "FLOAT",
+    "description": ""
+  },
+  {
+    "name": "foreign_notional",
+    "mode": "NULLABLE",
+    "type": "FLOAT",
+    "description": ""
+  },
+  {
+    "name": "rpi",
+    "mode": "NULLABLE",
+    "type": "INTEGER",
+    "description": ""
+  },
+  {
+    "name": "unix_timestamp",
+    "mode": "NULLABLE",
+    "type": "FLOAT",
+    "description": ""
+  }
+]

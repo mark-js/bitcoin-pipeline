@@ -16,37 +16,30 @@ from airflow.providers.google.cloud.operators.cloud_run import CloudRunExecuteJo
         'retry_exponential_backoff': True
     }
 )
-def bybit_execute_cloudrun():
-    gcp_project_id = '{{ var.value.gcp_project_id }}'
-    gcp_region = '{{ var.value.gcp_region }}'
-    bucket_name = '{{ var.value.gcp_data_bucket_name }}'
-    object_name = 'bybit/{{ var.json.bybit.product }}/date={{ ds }}/data.parquet'
-    
-    download_url = '{{ var.json.bybit.url }}/{{ var.json.bybit.product }}/{{ var.json.bybit.product }}{{ ds }}.csv.gz'
-
-    execute_cloudrun_ingest = CloudRunExecuteJobOperator(
-        task_id='execute_cloudrun_ingest',
+def bybit_ingest_tick_data():
+    execute_cloudrun_ingest_tick_data = CloudRunExecuteJobOperator(
+        task_id='execute_cloudrun_ingest_tick_data',
         gcp_conn_id='gcp',
-        project_id=gcp_project_id,
-        region=gcp_region,
-        job_name='ingest',
+        project_id='{{ var.value.gcp_project_id }}',
+        region='{{ var.value.gcp_region }}',
+        job_name='ingest_tick_data',
         overrides={
             'container_overrides': [
                 {
                     'args': [
                         '--url',
-                        download_url,
+                        '{{ var.json.bybit.url }}/{{ var.json.bybit.product }}/{{ var.json.bybit.product }}{{ ds }}.csv.gz',
                         '--bucket',
-                        bucket_name,
+                        '{{ var.value.gcp_analytics_data_bucket_name }}',
                         '--object',
-                        object_name
+                        'bybit/{{ var.json.bybit.product }}/date={{ ds }}/data.parquet'
                     ]
                 }
             ]
         }
     )
 
-    execute_cloudrun_ingest
+    execute_cloudrun_ingest_tick_data
 
-bybit_execute_cloudrun()
+bybit_ingest_tick_data()
 

@@ -67,6 +67,15 @@ def bybit_pipeline_gcp():
         region='{{ var.value.gcp_region }}',
         cluster_name='e2-cluster',
         cluster_config={
+            # TODO: untested config_bucket, temp_bucket, gce_cluster_config
+            'config_bucket': '{{ var.value.gcp_dataproc_config_bucket_name }}',
+            'temp_bucket': '{{ var.value.gcp_dataproc_temp_bucket_name }}',
+            'gce_cluster_config': {
+                'service_account': '{{ var.value.gcp_dataproc_service_account_email }}',
+                'service_account_scopes': [
+                    'https://www.googleapis.com/auth/cloud-platform'
+                ]
+            },
             'master_config': {
                 'num_instances': 1,
                 'machine_type_uri': 'e2-standard-2',

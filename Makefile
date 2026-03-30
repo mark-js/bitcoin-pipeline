@@ -54,6 +54,6 @@ remove-gcp:	## equivalent gcp deployment
 	docker volume remove bitcoin-pipeline-gcp-postgres
 	docker network remove bitcoin-pipeline-gcp-network
 build-ingest:
-	docker build -t us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/analytics/ingestion:latest -f analytics/ingestion/Dockerfile analytics/ingestion
+	docker build -t us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/analytics/ingest_tick_data:latest -f analytics/ingest_tick_data/Dockerfile analytics/ingest_tick_data
 push-ingest: build-ingest
-	docker push us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/analytics/ingestion:latest
+	docker push us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/analytics/ingest_tick_data:latest

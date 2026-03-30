@@ -1,9 +1,9 @@
 sources:
-  - name: bybit_btcusdt
+  - name: tick_data
     database: "{{ env_var('GCP_PROJECT_ID') }}"
-    schema: "{{ env_var('SOURCE_BTCUSDT_DATASET') }}"
+    schema: "{{ env_var('SOURCE_TICK_DATA_DATASET') }}"
     tables:
-      - name: test-gcs-btcusdt
+      - name: bybit
   - name: onchain_bitcoin
     database: bigquery-public-data
     schema: crypto_bitcoin

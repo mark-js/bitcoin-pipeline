@@ -8,6 +8,7 @@ SELECT
     tick_direction,
     rpi
 FROM
-    {{ source('bybit_btcusdt', 'test-gcs-btcusdt') }}
+    {{ source('tick_data', 'bybit') }}
 WHERE
-    date = '2026-03-15'
+    product = 'BTCUSDT'
+    AND date = '2026-03-28'

@@ -10,7 +10,7 @@ CREATE TABLE core.btcusdt (
     volume DECIMAL(15,3)
 );
 
-CREATE TABLE core.btcusdt_live (
+CREATE TABLE core.btcusdt_streaming (
       timestamp TIMESTAMP PRIMARY KEY,
       open DECIMAL(9,1),
       high DECIMAL(9,1),
